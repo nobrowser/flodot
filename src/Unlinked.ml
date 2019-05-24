@@ -1,5 +1,5 @@
 open Sm
-open Lift
+open LiftResult
 
 type t =
   Attributes of {t: Temperature.t; s: State.t; deps: string list}
@@ -9,7 +9,7 @@ let unlist = function `List x -> Ok x | _ -> Error "not a JSON list"
 let unstring = function `String x -> Ok x | _ -> Error "not a JSON string"
 
 let extract_string_list jss =
-  List.fold_left (Lift.fold unstring (Flip.f List.cons)) (Ok []) jss
+  List.fold_left (LiftResult.fold unstring (Flip.f List.cons)) (Ok []) jss
 
 let reader jt js jdeps =
   let rt = jt |> unstring |>>| Temperature.read in
@@ -44,7 +44,7 @@ let unlinked_nodes_of_pairs ps =
   | Error _ as e -> e
   | Ok v' -> Ok (k, v') in
   let madd m (k, v) = StringMap.add k v m in
-  List.fold_left (Lift.fold plumb madd) (Ok StringMap.empty) ps
+  List.fold_left (LiftResult.fold plumb madd) (Ok StringMap.empty) ps
 
 let check_duplicates ps =
   let rec check' m = function
