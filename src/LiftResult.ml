@@ -27,3 +27,11 @@ let triple = function
   | _, (Error _ as e), _ -> e
   | _, _, (Error _ as e) -> e
   | Ok x, Ok y, Ok z -> Ok (x, y, z)
+
+let lift_2_2 g = function
+  | _, (Error _ as e) -> e
+  | k, Ok v -> Ok (k, g v)
+
+let lift_2_1 g = function
+  | (Error _ as e), _ -> e
+  | Ok v, k -> Ok (g v, k)

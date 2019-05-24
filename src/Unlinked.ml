@@ -38,9 +38,7 @@ let attributes_of_pairs ps =
 let attributes_of_json j = j |> unassoc |>>| attributes_of_pairs
 
 let unlinked_nodes_of_pairs ps =
-  let plumb (k, v) = match attributes_of_json v with
-  | Error _ as e -> e
-  | Ok v' -> Ok (k, v') in
+  let plumb = LiftResult.lift_2_2 attributes_of_json in
   let madd m (k, v) = StringMap.add k v m in
   List.fold_left (LiftResult.fold plumb madd) (Ok StringMap.empty) ps
 
