@@ -1,0 +1,4 @@
+<src/*>: package(yojson)
+<src/*>: package(ocamlgraph)
+<src/*>: package(ppx_deriving.std)
+"src": include
