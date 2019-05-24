@@ -3,7 +3,7 @@ type t =
   | Blocked
   | Next
   | Done
-  
+
 let read s =
   if String.equal s "ready" then Ok Ready
   else if String.equal s "blocked" then Ok Blocked

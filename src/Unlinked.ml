@@ -20,7 +20,7 @@ let reader jt js jdeps =
   | (Error _ as e), _, _ -> e
   | _, (Error _ as e), _ -> e
   | _, _, (Error _ as e) -> e
-                    
+
 let rec assoc q = function
   | [] -> None
   | (k, v) :: items ->
@@ -56,6 +56,6 @@ let check_duplicates ps =
     | [] -> false
     | (k, _) :: kvs -> StringMap.mem k m || check' (StringMap.add k true m) kvs in
   if check' StringMap.empty ps then Error "duplicate keys in map" else Ok ps
-  
+
 let unlinked_nodes_of_json j =
   j |> unassoc |>>| check_duplicates |>>| unlinked_nodes_of_pairs

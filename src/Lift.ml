@@ -9,7 +9,7 @@ let chain g = function
   | Ok x -> g x
 
 let (|>>|) x g = (chain g) x
-          
+
 let fold g f a x =
   match (a, x) with
   | (Error _ as e), _ -> e
