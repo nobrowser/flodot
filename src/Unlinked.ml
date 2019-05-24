@@ -11,15 +11,13 @@ let unstring = function `String x -> Ok x | _ -> Error "not a JSON string"
 let extract_string_list jss =
   List.fold_left (LiftResult.fold unstring (Flip.f List.cons)) (Ok []) jss
 
+let reader' (t, s, deps) =  Attributes {t; s; deps}
+
 let reader jt js jdeps =
   let rt = jt |> unstring |>>| Temperature.read in
   let rs = js |> unstring |>>| State.read in
   let rdeps = jdeps |> unlist |>>| extract_string_list in
-  match rt, rs, rdeps with
-  | Ok t, Ok s, Ok deps -> Ok (Attributes {t; s; deps})
-  | (Error _ as e), _, _ -> e
-  | _, (Error _ as e), _ -> e
-  | _, _, (Error _ as e) -> e
+  (rt, rs, rdeps) |> LiftResult.triple |>> reader'
 
 let rec assoc q = function
   | [] -> None
