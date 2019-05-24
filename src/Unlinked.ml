@@ -39,11 +39,6 @@ let attributes_of_pairs ps =
 
 let attributes_of_json j = j |> unassoc |>>| attributes_of_pairs
 
-let add_new (k, v) m =
-  match v with
-  | Error _ as e -> e
-  | Ok attrs -> Ok (StringMap.add k attrs m)
-
 let unlinked_nodes_of_pairs ps =
   let plumb (k, v) = match attributes_of_json v with
   | Error _ as e -> e
