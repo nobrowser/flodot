@@ -6,7 +6,7 @@ type t =
 [@@deriving eq, ord, enum]
 
 exception Invalid of string
-  
+
 let read s =
   if String.equal s "done" then Done
   else if String.equal s "blocked" then Blocked

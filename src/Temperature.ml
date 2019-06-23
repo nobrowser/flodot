@@ -6,7 +6,7 @@ type t =
 [@@deriving eq, ord, enum]
 
 exception Invalid of string
-  
+
 let read s =
   if String.equal s "frozen" then Frozen
   else if String.equal s "cold" then Cold
