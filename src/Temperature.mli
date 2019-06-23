@@ -1,6 +1,8 @@
 type t
 
-val read : string -> (t, string) result
+exception Invalid of string
+   
+val read : string -> t
 
 val equal : t -> t -> bool
 

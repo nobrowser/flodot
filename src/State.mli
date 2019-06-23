@@ -4,7 +4,9 @@ type t =
   | Ready
   | Next
 
-val read : string -> (t, string) result
+exception Invalid of string
+  
+val read : string -> t
 
 val compare : t -> t -> int
 
