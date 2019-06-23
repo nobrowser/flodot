@@ -1,6 +1,6 @@
 type t
 
-val read : (string, string) FutureResult.t -> (t, string) FutureResult.t
+val read : (string, string) Resultx.t -> (t, string) Resultx.t
 
 val equal : t -> t -> bool
 

@@ -1,4 +1,4 @@
-open FutureResult
+open Resultx
 let ( >>= ) = bind
 let ( >>| ) a f = map f a
 

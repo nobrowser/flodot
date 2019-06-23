@@ -1,4 +1,4 @@
-open FutureResult
+open Resultx
 
 module StringMap = Map.Make(String)
 

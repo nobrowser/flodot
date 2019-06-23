@@ -1,4 +1,4 @@
-open FutureResult
+open Resultx
 
 module M =
   Graph.Persistent.Digraph.ConcreteBidirectional (Unlinked.V)

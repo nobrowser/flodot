@@ -1,4 +1,4 @@
-open FutureResult
+open Resultx
 let ( >>= ) = bind
 
 type t =
