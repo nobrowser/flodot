@@ -1,3 +1,5 @@
+open FutureResult
+
 module M =
   Graph.Persistent.Digraph.ConcreteBidirectional (Unlinked.V)
 

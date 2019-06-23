@@ -1,5 +1,4 @@
 module StringMap : Map.S with type key = string
 
-exception Not_found_n of string
-
-val find' : string -> 'a StringMap.t -> 'a
+val of_results : (string * ('a, string) FutureResult.t) list ->
+                 ('a StringMap.t, string) FutureResult.t

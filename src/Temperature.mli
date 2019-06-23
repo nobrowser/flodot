@@ -1,8 +1,6 @@
 type t
 
-exception Invalid of string
-   
-val read : string -> t
+val read : (string, string) FutureResult.t -> (t, string) FutureResult.t
 
 val equal : t -> t -> bool
 

@@ -1,63 +1,73 @@
+open FutureResult
+let ( >>= ) = bind
+let ( >>| ) a f = map f a
+
 module SM = Sm.StringMap
-
-exception Invalid of Yojson.Basic.t * string
-
-let invalid j s = raise (Invalid (j, s))
 
 type attributes =
   Attributes of {t: Temperature.t; s: State.t; deps: string list}
 
-let unassoc j =
-  match j with
-  | `Assoc x -> x
-  | _ -> invalid j "not a JSON assoc"
+let make_attributes rt rs rdeps =
+  rt >>= fun t ->
+  rs >>= fun s ->
+  rdeps >>= fun deps ->
+  Ok (Attributes {t; s; deps})
 
-let unlist j =
-  match j with
-  | `List x -> x
-  | _ ->  invalid j "not a JSON list"
+let unassoc = function `Assoc x -> Ok x | _ -> Error "not a JSON assoc"
+let unlist = function  `List x -> Ok x | _ -> Error "not a JSON list"
+let unstring = function `String x -> Ok x | _ -> Error "not a JSON string"
 
-let unstring j =
-  match j with
-  | `String x -> x
-  | _ -> invalid j "not a JSON string"
-
+let extract_string_list j =
+  let f r jstr =
+    r >>= fun l ->
+    unstring jstr >>= fun str ->
+    Ok (str :: l) in
+  unlist j >>= fun l ->
+  List.fold_left f (Ok []) l
+                                               
 let reader jt js jdeps =
-  let t = jt |> unstring |> Temperature.read in
-  let s = js |> unstring |> State.read in
-  let deps = jdeps |> unlist |> List.map unstring in
-  Attributes {t; s; deps}
+  let rt = jt |> unstring |> Temperature.read in
+  let rs = js |> unstring |> State.read in
+  let rdeps = jdeps |> extract_string_list in
+  make_attributes rt rs rdeps
 
 let rec assoc q = function
-  | [] -> None
+  | [] -> Error (q ^ " required but absent")
   | (k, v) :: items ->
-     if String.equal q k then Some v
+     if String.equal q k then Ok v
      else assoc q items
 
-let attributes_of_pairs j ps =
-  let t, s, deps = assoc "temp" ps, assoc "state" ps, assoc "deps" ps in
-  match t, s, deps with
-  | None, _ ,_ -> invalid j "temperature required but absent"
-  | _, None, _ -> invalid j "state required but absent"
-  | Some jt, Some js, None ->
-     reader jt js (`List [])
-  | Some jt, Some js, Some jl ->
-     reader jt js jl
+let rec assoc' q ~default = function
+  | [] -> Ok default
+  | (k, v) :: items ->
+     if String.equal q k then Ok v
+     else assoc' q default items
 
-let attributes_of_json j = j |> unassoc |> attributes_of_pairs j
+let attributes_of_pairs ps =
+  assoc "temp" ps >>= fun jt ->
+  assoc "state" ps >>= fun js ->
+  assoc' "deps" (`List []) ps >>= fun jdeps ->
+  reader jt js jdeps
+
+let attributes_of_json j = j |> unassoc >>= attributes_of_pairs
 
 let unlinked_nodes_of_pairs ps =
   let f = fun (k, j) -> (k, attributes_of_json j) in
-  ps |> List.map f |> List.to_seq |> SM.of_seq
+  ps |> List.map f |> Sm.of_results
 
-let check_duplicates j ps =
-  let rec check' m = function
-    | [] -> false
-    | (k, _) :: kvs -> SM.mem k m || check' (SM.add k true m) kvs in
-  if check' SM.empty ps then invalid j "duplicate keys in map" else ps
+let check_missing m =
+  let check_node n (Attributes {deps}) = function
+    | Error _ as e -> e
+    | v ->
+       ( match List.find_opt (fun dep -> not (SM.mem dep m)) deps with
+         | Some dep ->
+            Error (String.concat " " ["dependency"; dep; "of"; n; "is missing"])
+         | None -> v
+       ) in
+  SM.fold check_node m (Ok m)
 
 let unlinked_nodes_of_json j =
-  j |> unassoc |> check_duplicates j |> unlinked_nodes_of_pairs
+  j |> unassoc >>= unlinked_nodes_of_pairs >>= check_missing
 
 module V =
   struct
@@ -78,17 +88,11 @@ let temperature (_, Attributes {t}) = t
 let name (n, _) = n
 
 let graph j =
-  try
-  ( let l = unlinked_nodes_of_json j in
-    let vertices = SM.bindings l in
-    let edges =
-      let add_vertex_edges es ((n, Attributes {deps}) as dest) =
-        let add_edge es' n' = ((n', Sm.find' n' l), dest) :: es' in
-        List.fold_left add_edge es deps
+  unlinked_nodes_of_json j >>| fun ns ->
+  let vertices = SM.bindings ns in
+  let edges =
+    let add_vertex_edges es ((n, Attributes {deps}) as dest) =
+      let add_edge es' n' = ((n', SM.find n' ns), dest) :: es' in
+      List.fold_left add_edge es deps
       in List.fold_left add_vertex_edges [] vertices
-    in Ok (vertices, edges)
-  ) with
-  | Invalid (j, s) -> Error (j, s)
-  | Temperature.Invalid s -> Error (`String s, "invalid temperature")
-  | State.Invalid s -> Error (`String s, "invalid state")
-  | Sm.Not_found_n n -> Error (`String n, "not found")
+    in (vertices, edges)

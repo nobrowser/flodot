@@ -4,9 +4,7 @@ type t =
   | Ready
   | Next
 
-exception Invalid of string
-  
-val read : string -> t
+val read : (string, string) FutureResult.t -> (t, string) FutureResult.t
 
 val compare : t -> t -> int
 

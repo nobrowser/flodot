@@ -8,4 +8,5 @@ val temperature : V.t -> Temperature.t
 
 val name : V.t -> string
 
-val graph : Yojson.Basic.t -> (V.t list * (V.t * V.t) list, Yojson.Basic.t * string) result
+val graph : Yojson.Basic.t ->
+            (V.t list * (V.t * V.t) list, string) FutureResult.t
