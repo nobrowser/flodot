@@ -5,4 +5,4 @@ val of_json : Yojson.Basic.t -> (t, string) Resultx.t
 
 val has_cycle : t -> bool
 
-val check_consistency : t -> (unit, string) Resultx.t
+val check_consistency : t -> (t, string) Resultx.t

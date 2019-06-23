@@ -1,6 +1,4 @@
-open Resultx
-let ( >>= ) = bind
-let ( >>| ) a f = map f a
+open Resultx.Monad
 
 module SM = Sm.StringMap
 
@@ -11,20 +9,15 @@ let make_attributes rt rs rdeps =
   rt >>= fun t ->
   rs >>= fun s ->
   rdeps >>= fun deps ->
-  Ok (Attributes {t; s; deps})
+  return (Attributes {t; s; deps})
 
-let unassoc = function `Assoc x -> Ok x | _ -> Error "not a JSON assoc"
-let unlist = function  `List x -> Ok x | _ -> Error "not a JSON list"
-let unstring = function `String x -> Ok x | _ -> Error "not a JSON string"
+let un_error str = Resultx.error ("not a JSON " ^ str)
+let unassoc = function `Assoc x -> return x | _ -> un_error "assoc"
+let unlist = function `List x -> return x | _ -> un_error "list"
+let unstring = function `String x -> return x | _ -> un_error "string"
 
-let extract_string_list j =
-  let f r jstr =
-    r >>= fun l ->
-    unstring jstr >>= fun str ->
-    Ok (str :: l) in
-  unlist j >>= fun l ->
-  List.fold_left f (Ok []) l
-                                               
+let extract_string_list j = unlist j >>| List.map unstring >>= Resultx.ljoin
+
 let reader jt js jdeps =
   let rt = jt |> unstring |> Temperature.read in
   let rs = js |> unstring |> State.read in
@@ -32,15 +25,15 @@ let reader jt js jdeps =
   make_attributes rt rs rdeps
 
 let rec assoc q = function
-  | [] -> Error (q ^ " required but absent")
+  | [] -> Resultx.error (q ^ " required but absent")
   | (k, v) :: items ->
-     if String.equal q k then Ok v
+     if String.equal q k then return v
      else assoc q items
 
 let rec assoc' q ~default = function
-  | [] -> Ok default
+  | [] -> return default
   | (k, v) :: items ->
-     if String.equal q k then Ok v
+     if String.equal q k then return v
      else assoc' q default items
 
 let attributes_of_pairs ps =
@@ -51,20 +44,24 @@ let attributes_of_pairs ps =
 
 let attributes_of_json j = j |> unassoc >>= attributes_of_pairs
 
+let check_dupes' l =
+  try Sm.check_dupes l |> return with
+  | Sm.Ex k -> Resultx.error ("duplicate key " ^ k)
+                         
 let unlinked_nodes_of_pairs ps =
   let f = fun (k, j) -> (k, attributes_of_json j) in
-  ps |> List.map f |> Sm.of_results
+  ps |> List.map f |> check_dupes' >>= Resultx.mjoin
 
+exception Missing of string * string
+  
 let check_missing m =
-  let check_node n (Attributes {deps}) = function
-    | Error _ as e -> e
-    | v ->
-       ( match List.find_opt (fun dep -> not (SM.mem dep m)) deps with
-         | Some dep ->
-            Error (String.concat " " ["dependency"; dep; "of"; n; "is missing"])
-         | None -> v
-       ) in
-  SM.fold check_node m (Ok m)
+  let p n (Attributes {deps}) =
+    match List.find_opt (fun dep -> not (SM.mem dep m)) deps with
+    | Some dep -> raise (Missing (n, dep))
+    | None -> () in
+  try SM.iter p m ; return m with
+  | Missing (n, dep) -> 
+     Resultx.error (String.concat " " ["dependency"; dep; "of"; n; "is missing"])
 
 let unlinked_nodes_of_json j =
   j |> unassoc >>= unlinked_nodes_of_pairs >>= check_missing

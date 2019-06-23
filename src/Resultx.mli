@@ -42,3 +42,22 @@ val to_option : ('a, 'e) t -> 'a option
 val to_list : ('a, 'e) t -> 'a list
 
 val to_seq : ('a, 'e) t -> 'a Seq.t
+
+(* extensions over Result module in 4.08.0 *)
+  
+val ljoin : ('a, 'e) t list -> ('a list, 'e) t
+
+val mjoin : ('a, 'e) t Sm.StringMap.t -> ('a Sm.StringMap.t, 'e) t
+
+module type MONAD =
+  sig
+
+  val return : 'a -> ('a, 'e) t
+  
+  val ( >>= ) : ('a, 'e) t ->
+                ('a -> ('b, 'e) t) -> ('b, 'e) t
+
+  val ( >>| ) : ('a, 'e) t -> ('a -> 'b) -> ('b, 'e) t
+  end
+
+module Monad : MONAD

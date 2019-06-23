@@ -1,12 +1,11 @@
-open Resultx
-
 module StringMap = Map.Make(String)
 
-let of_results l =
+exception Ex of string
+
+let check_dupes l =
   let rec add1 m = function
-  | [] -> Ok m
-  | (_, (Error _ as e)) :: _ -> e
-  | (k, Ok v) :: kvs ->
-     if StringMap.mem k m then Error ("duplicate key " ^ k)
+  | [] -> m
+  | (k, v) :: kvs ->
+     if StringMap.mem k m then raise (Ex k)
      else add1 (StringMap.add k v m) kvs in
   add1 StringMap.empty l

@@ -74,3 +74,39 @@ let to_list = function
 let to_seq = function
   | Ok v -> Seq.return v
   | _ -> Seq.empty
+
+let ljoin (type e) l =
+  let module J = struct exception Join of e end in
+  let f a = function
+    | Ok v -> v :: a
+    | Error e -> raise (J.Join e) in
+  try Ok (List.fold_left f [] l) with J.Join e -> Error e
+
+let mjoin (type e) m =
+  let module J = struct exception Join of e end in
+  let f k r a = match r with
+  | Ok v -> Sm.StringMap.add k v a
+  | Error e -> raise (J.Join e) in
+  try Ok (Sm.StringMap.fold f m (Sm.StringMap.empty)) with J.Join e -> Error e
+
+module type MONAD =
+  sig
+
+  val return : 'a -> ('a, 'e) t
+  
+  val ( >>= ) : ('a, 'e) t ->
+                ('a -> ('b, 'e) t) -> ('b, 'e) t
+
+  val ( >>| ) : ('a, 'e) t -> ('a -> 'b) -> ('b, 'e) t
+  end
+                                                                     
+module Monad : MONAD =
+  struct
+
+  let return = ok
+  
+  let ( >>= ) = bind
+
+  let ( >>| ) a f = map f a
+
+  end
