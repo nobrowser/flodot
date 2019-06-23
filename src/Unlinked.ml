@@ -73,24 +73,9 @@ module V =
 
   end
 
-module E =
-  struct
-
-  type t = V.t * V.t
-  let compare (v1, v2) (v3, v4) =
-    match V.compare v1 v3 with
-    | 0 -> V.compare v2 v4
-    | i -> i
-
-  type vertex = V.t
-  let src (v1, v2) = v1
-  let dst (v1, v2) = v2
-
-  type label = unit
-  let create v () v' = (v, v')
-  let label e = ()
-
-  end
+let state (_, Attributes {s}) = s
+let temperature (_, Attributes {t}) = t
+let name (n, _) = n
 
 let graph j =
   try

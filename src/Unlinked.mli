@@ -2,6 +2,10 @@ type attributes
 
 module V : Graph.Sig.VERTEX with type t = string * attributes
 
-module E : Graph.Sig.EDGE with type t = V.t * V.t
+val state : V.t -> State.t
 
-val graph : Yojson.Basic.t -> (V.t list * E.t list, Yojson.Basic.t * string) result
+val temperature : V.t -> Temperature.t
+
+val name : V.t -> string
+
+val graph : Yojson.Basic.t -> (V.t list * (V.t * V.t) list, Yojson.Basic.t * string) result
