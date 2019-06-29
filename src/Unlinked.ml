@@ -44,27 +44,20 @@ let attributes_of_pairs ps =
 
 let attributes_of_json j = j |> unassoc >>= attributes_of_pairs
 
-let check_dupes' l =
-  try Sm.check_dupes l |> return with
-  | Sm.Ex k -> Resultx.error ("duplicate key " ^ k)
-                         
 let unlinked_nodes_of_pairs ps =
   let f = fun (k, j) -> (k, attributes_of_json j) in
-  ps |> List.map f |> check_dupes' >>= Resultx.mjoin
+  ps |> List.map f |> Sm.check_dupes
 
-exception Missing of string * string
-  
 let check_missing m =
-  let p n (Attributes {deps}) =
+  let make_err l = Resultx.error (String.concat " " l) in
+  let p _ n (Attributes {deps}) =
     match List.find_opt (fun dep -> not (SM.mem dep m)) deps with
-    | Some dep -> raise (Missing (n, dep))
-    | None -> () in
-  try SM.iter p m ; return m with
-  | Missing (n, dep) -> 
-     Resultx.error (String.concat " " ["dependency"; dep; "of"; n; "is missing"])
+    | Some dep -> make_err ["dependency"; dep; "of"; n; "is missing"]
+    | None -> Ok () in
+  Sm.StringMapRx.mfold p () m |> Resultx.map (fun _ -> m)
 
 let unlinked_nodes_of_json j =
-  j |> unassoc >>= unlinked_nodes_of_pairs >>= check_missing
+  j |> unassoc >>= unlinked_nodes_of_pairs >>= Sm.StringMapRx.mjoin >>= check_missing
 
 module V =
   struct

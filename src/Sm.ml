@@ -1,11 +1,9 @@
 module StringMap = Map.Make(String)
 
-exception Ex of string
-
 let check_dupes l =
-  let rec add1 m = function
-  | [] -> m
-  | (k, v) :: kvs ->
-     if StringMap.mem k m then raise (Ex k)
-     else add1 (StringMap.add k v m) kvs in
-  add1 StringMap.empty l
+  let rec add1 m (k, v) =
+    if StringMap.mem k m then Resultx.error k
+    else Resultx.ok (StringMap.add k v m) in
+  Resultx.lfold add1 StringMap.empty l
+
+module StringMapRx = Resultx.Maps (StringMap)

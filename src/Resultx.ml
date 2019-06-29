@@ -82,29 +82,59 @@ let ljoin (type e) l =
     | Error e -> raise (J.Join e) in
   try Ok (List.fold_left f [] l) with J.Join e -> Error e
 
-let mjoin (type e) m =
-  let module J = struct exception Join of e end in
-  let f k r a = match r with
-  | Ok v -> Sm.StringMap.add k v a
-  | Error e -> raise (J.Join e) in
-  try Ok (Sm.StringMap.fold f m (Sm.StringMap.empty)) with J.Join e -> Error e
+let rec lfold f b = function
+  | [] -> Ok b
+  | av :: avs ->
+     ( match f b av with
+       | Ok b' -> lfold f b' avs
+       | Error _ as e -> e )
+
+module type MAPS =
+  sig
+
+  module M : Map.S
+  val mjoin : ('a, 'e) t M.t -> ('a M.t, 'e) t
+  val mfold : ('b -> M.key -> 'a -> ('b, 'e) t) -> 'b -> 'a M.t -> ('b, 'e) t
+
+  end
+
+module Maps (M': Map.S) =
+  struct
+
+  module M = M'
+
+  let mjoin (type e) m =
+    let module J = struct exception Join of e end in
+    let f k r a = match r with
+    | Ok v -> M.add k v a
+    | Error e -> raise (J.Join e) in
+    try Ok (M.fold f m (M.empty)) with J.Join e -> Error e
+
+  let mfold (type e) f b m =
+    let module F = struct exception Fold of e end in
+    let f' k a b' = match f b' k a with
+    | Ok b'' -> b''
+    | Error e -> raise (F.Fold e) in
+    try Ok (M.fold f' m b) with F.Fold e -> Error e
+
+  end
 
 module type MONAD =
   sig
 
   val return : 'a -> ('a, 'e) t
-  
+
   val ( >>= ) : ('a, 'e) t ->
                 ('a -> ('b, 'e) t) -> ('b, 'e) t
 
   val ( >>| ) : ('a, 'e) t -> ('a -> 'b) -> ('b, 'e) t
   end
-                                                                     
+
 module Monad : MONAD =
   struct
 
   let return = ok
-  
+
   let ( >>= ) = bind
 
   let ( >>| ) a f = map f a

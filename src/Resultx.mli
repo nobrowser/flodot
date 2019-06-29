@@ -44,16 +44,28 @@ val to_list : ('a, 'e) t -> 'a list
 val to_seq : ('a, 'e) t -> 'a Seq.t
 
 (* extensions over Result module in 4.08.0 *)
-  
+
 val ljoin : ('a, 'e) t list -> ('a list, 'e) t
 
-val mjoin : ('a, 'e) t Sm.StringMap.t -> ('a Sm.StringMap.t, 'e) t
+val lfold : ('b -> 'a -> ('b, 'e) t) -> 'b -> 'a list -> ('b, 'e) t
+
+module type MAPS =
+  sig
+
+  module M : Map.S
+  val mjoin : ('a, 'e) t M.t -> ('a M.t, 'e) t
+  val mfold : ('b -> M.key -> 'a -> ('b, 'e) t) -> 'b -> 'a M.t -> ('b, 'e) t
+
+  end
+
+module Maps (M': Map.S): MAPS
+       with module M = M'
 
 module type MONAD =
   sig
 
   val return : 'a -> ('a, 'e) t
-  
+
   val ( >>= ) : ('a, 'e) t ->
                 ('a -> ('b, 'e) t) -> ('b, 'e) t
 
