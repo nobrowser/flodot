@@ -3,15 +3,12 @@ module Cmd = Cmdliner
 open Resultx.Monad
 
 let run_check_consistency fname =
-  let res = try
-    let ch = if String.equal fname "-" then stdin else open_in fname in
-    ch |>
-    Yojson.Basic.from_channel |>
-    Flograph.of_json >>=
-    Flograph.check_consistency with
-    | Sys_error s -> Resultx.error s
-    | Yojson.Json_error s -> Resultx.error s
-  in Resultx.fold res ~ok:(fun _ -> `Ok ()) ~error:(fun e -> `Error e)
+  let ch = if String.equal fname "-" then stdin else open_in fname in
+  ch |>
+  Yojson.Basic.from_channel |>
+  Flograph.of_json >>=
+  Flograph.check_consistency |>
+  Resultx.fold ~ok:(fun _ -> `Ok ()) ~error:(fun e -> failwith e)
 
 let vfname =
   let open Cmd.Arg in
