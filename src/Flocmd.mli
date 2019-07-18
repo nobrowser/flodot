@@ -1,3 +1,3 @@
-module Cmd : module type of Cmdliner
+open Cmdliner
 
-val check_cmd : unit Cmd.Term.result Cmd.Term.t * Cmd.Term.info
+val check_cmd : unit Term.result Term.t * Term.info

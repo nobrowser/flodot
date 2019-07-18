@@ -4,7 +4,7 @@ OPAM_PATH := /usr/local/packages/opam/$(shell opam switch show)/bin
 FP := env PATH=$(BASE_PATH):$(OPAM_PATH)
 
 byte:
-	$(FP) ocamlbuild -classic-display -use-ocamlfind Flodot.byte
+	$(FP) ocamlbuild -classic-display -use-ocamlfind Flodot_check.byte
 
 clean:
 	$(FP) ocamlbuild -classic-display -use-ocamlfind -clean
