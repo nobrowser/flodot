@@ -3,7 +3,7 @@ module Cmd = Cmdliner
 open Resultx.Monad
 
 type errors =
-  | System
+  | System [@value 1]
   | Json
   | Inconsistent
   [@@deriving enum]
@@ -16,24 +16,12 @@ let errors_doc_alist =
    (errors_to_enum Inconsistent,
     "The graph -- as specified by the input JSON file -- is inconsistent.")]
 
-module IntKey =
-  struct
-
-  type t = int
-  let compare (n1: int) (n2: int) =
-    if n1 < n2 then -1
-    else if n2 < n1 then 1
-    else 0
-
-  end
-
-module IMap = Map.Make(IntKey)
-
-let errors_doc_map = errors_doc_alist |> List.to_seq |> IMap.of_seq
+let errors_man_blocks =
+  List.map (fun (e, t) -> `I (Printf.sprintf "%d" e, t)) errors_doc_alist
 
 let make_error err errstr =
   let n = errors_to_enum err in
-  `Error (false, Printf.sprintf "%d: %s" n errstr)
+  `Error (false, Printf.sprintf "ERROR %d: %s" n errstr)
 
 let run_check_consistency fname =
   try
@@ -67,10 +55,11 @@ let check_cmd =
       and that every node name occurs exactly once, it also verifies that
       the graph is acyclic, that a node's \"temperature\" (i.e. priority)
       does not exceed the temperature of any of its dependencies, and that
-      a node with a dependency in a state other than Done is itself in
-      the Blocked state.";
+      a node with a dependency in a state other than $(b,Done) is itself in
+      the $(b,Blocked) state.";
   `P "To verify a graph passed via standard output (for example in a shell pipe)
-      supply \"-\" as the FILE argument, or omit it completely.";]
+      supply $(b,-) as the $(i,FILE) argument, or omit it completely.";
+  `S "ERRORS"; `Blocks errors_man_blocks]
   in
   let exits = normal_error_info :: Cmd.Term.default_exits in
   let open Cmd.Term in
