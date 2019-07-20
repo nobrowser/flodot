@@ -1,3 +1,3 @@
 open Cmdliner
 
-val check_cmd : unit Term.result Term.t * Term.info
+val check_cmd : unit Term.t * Term.info

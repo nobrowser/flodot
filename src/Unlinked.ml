@@ -37,7 +37,7 @@ let rec assoc' q ~default = function
      else assoc' q default items
 
 let attributes_of_pairs ps =
-  assoc "temp" ps >>= fun jt ->
+  assoc' "temp" (`String "normal") ps >>= fun jt ->
   assoc "state" ps >>= fun js ->
   assoc' "deps" (`List []) ps >>= fun jdeps ->
   reader jt js jdeps
