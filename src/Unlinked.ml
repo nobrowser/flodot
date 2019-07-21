@@ -37,7 +37,11 @@ let rec assoc' q ~default = function
      else assoc' q default items
 
 let attributes_of_pairs ps =
-  assoc' "temp" (`String "normal") ps >>= fun jt ->
+  let tempreq = Floglob.get () |> Floglob.get_temp_required in
+  let temp =
+    if tempreq then assoc "temp" ps
+    else assoc' "temp" (`String "normal") ps in
+  temp >>= fun jt ->
   assoc "state" ps >>= fun js ->
   assoc' "deps" (`List []) ps >>= fun jdeps ->
   reader jt js jdeps

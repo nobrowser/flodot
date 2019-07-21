@@ -1,4 +1,4 @@
-module Cmd = Cmdliner
+open Cmdliner
 
 open Resultx.Monad
 
@@ -23,7 +23,11 @@ let make_error err errstr =
   let n = errors_to_enum err in
   `Error (false, Printf.sprintf "ERROR %d: %s" n errstr)
 
-let run_check_consistency fname =
+let run_check_consistency tempreq fname =
+  let _ =
+    Floglob.get () |>
+    Floglob.mod_temp_required tempreq |>
+    Floglob.set in
   try
   ( let ch = if String.equal fname "-" then stdin else open_in fname in
     ch |>
@@ -36,20 +40,26 @@ let run_check_consistency fname =
   | Yojson.Json_error e -> make_error Json e
 
 let vfname =
-  let open Cmd.Arg in
-  info [] ~docv:"FILE" |> pos 0 file "-" |> value
+  Arg.(info [] ~docv:"FILE" |> pos 0 file "-" |> value)
 
+let vtempreq =
+  let doc = "Normally $(mname) will assign a default \"temperature\"
+             (ie. priority) of $(b,Normal) to a node $(i,N) if $(i,N)
+             has no $(b,temp) attribute.  But if $(opt) is specified,
+             such nodes will be regarded as an error." in
+  Arg.(info ["t"; "temp_required"] ~doc |> flag |> value)
+  
 let normal_error_info =
   let doc = "This exit status indicates a normal program error,
              whose code -- one of those docuemnted in the ERRORS section --
              will have been printed on standard error together with
              an explanatory message." in
-  Cmd.Term.exit_info ~doc 1
+  Term.exit_info ~doc 1
   
 let check_cmd =
   let doc = "Check consistency of dependency graph" in
   let man = [
-  `S Cmd.Manpage.s_description;
+  `S Manpage.s_description;
   `P "$(tname) verifies that the graph specified in $(i,FILE) is consistent.
       Apart from checking that every dependency specified also occurs as a node,
       and that every node name occurs exactly once, it also verifies that
@@ -60,8 +70,6 @@ let check_cmd =
   `P "To verify a graph passed via standard output (for example in a shell pipe)
       supply $(b,-) as the $(i,FILE) argument, or omit it completely.";
   `S "ERRORS"; `Blocks errors_man_blocks]
-  in
-  let exits = normal_error_info :: Cmd.Term.default_exits in
-  let open Cmd.Term in
-  const run_check_consistency $ vfname |> ret,
-  info "Flodot_check" ~version:"v0.1.0" ~doc ~exits ~man
+  in Term.(const run_check_consistency $ vtempreq $ vfname |> ret,
+           info "Flodot_check" ~version:"v0.1.0" ~doc ~man           
+           ~exits:(normal_error_info :: default_exits))
