@@ -45,7 +45,7 @@ let run_check_consistency temp_required fname =
   | Yojson.Json_error e -> make_error Json e
 
 let vfname =
-  Arg.(info [] ~docv:"FILE" |> pos 0 file "-" |> value)
+  Arg.(info [] ~docv:"FILE" |> pos 0 string "-" |> value)
 
 let vtempreq =
   let doc = "Normally $(mname) will assign a default \"temperature\"
