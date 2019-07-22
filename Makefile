@@ -1,13 +1,20 @@
 SHELL = /bin/sh
 BASE_PATH := $(shell printenv PATH)
 OPAM_PATH := /usr/local/packages/opam/$(shell opam switch show)/bin
-FP := env PATH=$(BASE_PATH):$(OPAM_PATH)
+COMPILE := env PATH=$(BASE_PATH):$(OPAM_PATH) ocamlbuild -classic-display -use-ocamlfind
 
-byte:
-	$(FP) ocamlbuild -classic-display -use-ocamlfind Flodot_check.byte
+byte: Flodot_check.byte Flodot_dot.byte
+
+Flodot_dot.byte: FORCE
+	$(COMPILE) Flodot_dot.byte
+
+Flodot_check.byte: FORCE
+	$(COMPILE) Flodot_check.byte
+
+FORCE:
 
 clean:
-	$(FP) ocamlbuild -classic-display -use-ocamlfind -clean
+	$(COMPILE) -clean
 
 .PHONY: byte clean
 
