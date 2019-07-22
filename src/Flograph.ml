@@ -62,11 +62,13 @@ module Dot_params =
 
   let vertex_attributes v =
     match Attributes.state v with
-    | State.Blocked -> [`Shape `Parallelogram; `Fillcolor 0xf4bada]
-    | State.Done -> [`Shape `Oval; `Fillcolor 0xeeeeee]
-    | State.Ready -> [`Shape `Oval; `Fillcolor 0xffffff]
-    | State.Next -> [`Shape `Oval; `Fillcolor 0x00cc00]
+    | State.Blocked -> [`Shape `Parallelogram]
+    | State.Done -> [`Shape `Oval]
+    | State.Ready -> [`Shape `Oval; `Color 0x00cc00]
+    | State.Next -> [`Shape `Oval; `Color 0xcc0000]
 
   end
 
 module Dot_engine = Graph.Graphviz.Dot (Dot_params)
+
+let output_dot outch g = Ok (Dot_engine.output_graph outch g)
