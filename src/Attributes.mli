@@ -1,6 +1,8 @@
 type attributes
 
-val deps : attributes -> string list
+val find_deps_opt : f:(string -> bool) -> attributes -> string option
+
+val fold_left_deps : f:('a -> string -> 'a) -> 'a -> attributes -> 'a
   
 val make_attributes : (Temperature.t , string) Resultx.t ->
                       (State.t , string) Resultx.t ->

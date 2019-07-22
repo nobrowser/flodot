@@ -66,7 +66,7 @@ module Graph_builder (F : JSON_FLAGS) : GRAPH_BUILDER =
   let check_missing m =
     let make_err l = Resultx.error (String.concat " " l) in
     let p _ n a =
-      match List.find_opt (fun dep -> not (SM.mem dep m)) (deps a) with
+      match find_deps_opt ~f:(fun dep -> not (SM.mem dep m)) a with
       | Some dep -> make_err ["dependency"; dep; "of"; n; "is missing"]
       | None -> Ok () in
     Sm.StringMapRx.mfold p () m |> Resultx.map (fun _ -> m)
@@ -84,7 +84,7 @@ module Graph_builder (F : JSON_FLAGS) : GRAPH_BUILDER =
     let edges =
       let add_vertex_edges es ((n, a) as dest) =
         let add_edge es' n' = ((n', SM.find n' ns), dest) :: es' in
-        List.fold_left add_edge es (deps a)
+        fold_left_deps ~f:add_edge es a
       in List.fold_left add_vertex_edges [] vertices
     in (vertices, edges)
 

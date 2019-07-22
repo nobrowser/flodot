@@ -6,7 +6,9 @@ type attributes =
   ; deps: string list
   }
 
-let deps { deps = ds } = ds
+let find_deps_opt ~f {deps} = List.find_opt f deps
+
+let fold_left_deps ~f a {deps} = List.fold_left f a deps
 
 let make_attributes rt rs rdeps =
   rt >>= fun t ->
