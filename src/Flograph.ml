@@ -6,7 +6,7 @@ module M =
 type t = M.t
 
 let of_json j =
-  j |> Unlinked.graph >>= fun (vs, es) ->
+  j |> From_json.graph >>= fun (vs, es) ->
   let vf = fun g -> List.fold_left M.add_vertex g vs in
   let add_edge' g (v1, v2) = M.add_edge g v1 v2 in
   let ef = fun g -> List.fold_left add_edge' g es in
