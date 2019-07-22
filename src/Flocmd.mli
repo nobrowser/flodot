@@ -1,3 +1,4 @@
 open Cmdliner
 
-val check_cmd : unit Term.t * Term.info
+val eval_and_exit_annotated : (int * string option) Term.t * Term.info -> unit
+val check_cmd : (int * string option) Term.t * Term.info
