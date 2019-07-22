@@ -71,4 +71,5 @@ module Dot_params =
 
 module Dot_engine = Graph.Graphviz.Dot (Dot_params)
 
-let output_dot outch g = Ok (Dot_engine.output_graph outch g)
+let output_dot outch g =
+  Ok (Dot_engine.output_graph outch g; output_char outch '\n'; flush outch)
