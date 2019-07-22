@@ -1,15 +1,7 @@
 open Resultx.Monad
+open Attributes
 
 module SM = Sm.StringMap
-
-type attributes =
-  Attributes of {t: Temperature.t; s: State.t; deps: string list}
-
-let make_attributes rt rs rdeps =
-  rt >>= fun t ->
-  rs >>= fun s ->
-  rdeps >>= fun deps ->
-  return (Attributes {t; s; deps})
 
 let un_error str = Resultx.error ("not a JSON " ^ str)
 let unassoc = function `Assoc x -> return x | _ -> un_error "assoc"
@@ -54,8 +46,8 @@ let unlinked_nodes_of_pairs ps =
 
 let check_missing m =
   let make_err l = Resultx.error (String.concat " " l) in
-  let p _ n (Attributes {deps}) =
-    match List.find_opt (fun dep -> not (SM.mem dep m)) deps with
+  let p _ n a =
+    match List.find_opt (fun dep -> not (SM.mem dep m)) (deps a) with
     | Some dep -> make_err ["dependency"; dep; "of"; n; "is missing"]
     | None -> Ok () in
   Sm.StringMapRx.mfold p () m |> Resultx.map (fun _ -> m)
@@ -63,30 +55,12 @@ let check_missing m =
 let unlinked_nodes_of_json j =
   j |> unassoc >>= unlinked_nodes_of_pairs >>= Sm.StringMapRx.mjoin >>= check_missing
 
-module V =
-  struct
-
-  type t = string * attributes
-  let equal (n, _) (n', _) = String.equal n n'
-  let compare (n, _) (n', _) = String.compare n n'
-  let hash (n, _) = HashedString.hash n
-
-  type label = t
-  let create n = n
-  let label n = n
-
-  end
-
-let state (_, Attributes {s}) = s
-let temperature (_, Attributes {t}) = t
-let name (n, _) = n
-
 let graph j =
   unlinked_nodes_of_json j >>| fun ns ->
   let vertices = SM.bindings ns in
   let edges =
-    let add_vertex_edges es ((n, Attributes {deps}) as dest) =
+    let add_vertex_edges es ((n, a) as dest) =
       let add_edge es' n' = ((n', SM.find n' ns), dest) :: es' in
-      List.fold_left add_edge es deps
+      List.fold_left add_edge es (deps a)
       in List.fold_left add_vertex_edges [] vertices
     in (vertices, edges)
