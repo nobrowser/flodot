@@ -23,16 +23,12 @@ let make_error err errstr =
   let n = errors_to_enum err in
   `Error (false, Printf.sprintf "ERROR %d: %s" n errstr)
 
-let run_check_consistency tempreq fname =
-  let _ =
-    Floglob.get () |>
-    Floglob.mod_temp_required tempreq |>
-    Floglob.set in
+let run_check_consistency temp_required fname =
   try
   ( let ch = if String.equal fname "-" then stdin else open_in fname in
     ch |>
     Yojson.Basic.from_channel |>
-    Flograph.of_json >>=
+    Flograph.of_json ~temp_required >>=
     Flograph.check_consistency |>
     Resultx.fold ~ok:(fun _ -> `Ok ()) ~error:(fun e -> make_error Inconsistent e)
   ) with
