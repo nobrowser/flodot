@@ -25,7 +25,7 @@ let raise_hotter n1 n2 =
   raise (Inconsistent [n1; "is hotter than its dependency"; n2])
 
 let raise_blocked n1 n2 =
-  raise (Inconsistent [n1; "is blocked by"; n2])
+  raise (Inconsistent [n2; "is blocked by"; n1])
 
 let check_edge v1 v2 =
   let n1 = Attributes.name v1 in
