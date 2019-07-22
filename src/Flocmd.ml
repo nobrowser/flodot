@@ -89,7 +89,7 @@ let check_cmd =
   `P "To verify a graph passed via standard output (for example in a shell pipe)
       supply $(b,-) as the $(i,FILE) argument, or omit it completely."]
   in Term.(const run_check_consistency $ vtempreq $ vifname |> ret,
-           info "Flodot_check" ~version:"v0.1.0" ~doc ~man           
+           info "Flodot_check" ~version:"v0.1.0" ~doc ~man
            ~exits:(errors_infos @ default_exits))
 
 let output_dot_cmd =
