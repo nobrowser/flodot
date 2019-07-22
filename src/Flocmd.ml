@@ -2,6 +2,8 @@ open Cmdliner
 
 open Resultx.Monad
 
+type prog = (int * string option) Term.t * Term.info
+
 let eval_and_exit_annotated ti =
   let st =
     match Term.eval ti with
@@ -11,7 +13,7 @@ let eval_and_exit_annotated ti =
     | `Error `Parse -> Term.exit_status_cli_error
     | `Ok (n, None) -> n
     | `Ok (n, Some msg) ->
-       let _ = Printf.fprintf stderr "%s\n" msg in n
+       let _ = Printf.fprintf stderr "%s\n" msg ; flush stderr in n
   in Stdlib.exit st
 
 type errors =
@@ -32,9 +34,9 @@ let errors_infos =
 let make_error err errstr =
   let n = errors_to_enum err in `Ok (n, Some errstr)
 
-let run_check_consistency temp_required fname =
+let run_check_consistency temp_required ifname =
   try
-  ( let ch = if String.equal fname "-" then stdin else open_in fname in
+  ( let ch = if String.equal ifname "-" then stdin else open_in ifname in
     ch |>
     Yojson.Basic.from_channel |>
     Flograph.of_json ~temp_required >>=
@@ -44,7 +46,21 @@ let run_check_consistency temp_required fname =
   | Sys_error e -> make_error System e
   | Yojson.Json_error e -> make_error Json e
 
-let vfname =
+let run_output_dot temp_required ofname ifname =
+  try
+  ( let inch = if String.equal ifname "-" then stdin else open_in ifname in
+    let outch = if String.equal ofname "-" then stdout else open_out ofname in
+    inch |>
+    Yojson.Basic.from_channel |>
+    Flograph.of_json ~temp_required >>=
+    Flograph.check_consistency >>=
+    Flograph.output_dot outch |>
+    Resultx.fold ~ok:(fun _ -> `Ok (0, None)) ~error:(fun e -> make_error Inconsistent e)
+  ) with
+  | Sys_error e -> make_error System e
+  | Yojson.Json_error e -> make_error Json e
+
+let vifname =
   Arg.(info [] ~docv:"FILE" |> pos 0 string "-" |> value)
 
 let vtempreq =
@@ -53,7 +69,12 @@ let vtempreq =
              has no $(b,temp) attribute.  But if $(opt) is specified,
              such nodes will be regarded as an error." in
   Arg.(info ["t"; "temp_required"] ~doc |> flag |> value)
-  
+
+let vofname =
+  let doc = "Direct output to the named file $(i,FILE),
+             or to the standard output if $(i,FILE) is $(b,-)." in
+  Arg.(info ["o"; "output"] ~doc ~docv:"FILE" |> opt string "-" |> value)
+
 let check_cmd =
   let doc = "Check consistency of dependency graph" in
   let man = [
@@ -67,6 +88,16 @@ let check_cmd =
       the $(b,Blocked) state.";
   `P "To verify a graph passed via standard output (for example in a shell pipe)
       supply $(b,-) as the $(i,FILE) argument, or omit it completely."]
-  in Term.(const run_check_consistency $ vtempreq $ vfname |> ret,
+  in Term.(const run_check_consistency $ vtempreq $ vifname |> ret,
            info "Flodot_check" ~version:"v0.1.0" ~doc ~man           
+           ~exits:(errors_infos @ default_exits))
+
+let output_dot_cmd =
+  let doc = "Output dependency graph in dot format" in
+  let man = [
+  `S Manpage.s_description;
+  `P "After verifying the consistency of the input graph just like $(b,Flodot_check),
+      $(tname) prints its $(b,dot) representation on the specified output file."]
+  in Term.(const run_output_dot $ vtempreq $ vofname $ vifname |> ret,
+           info "Flodot_dot" ~version:"v0.1.0" ~doc ~man
            ~exits:(errors_infos @ default_exits))
