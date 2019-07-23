@@ -94,10 +94,11 @@ let check_cmd =
 
 let output_dot_cmd =
   let doc = "Output dependency graph in dot format" in
+  let man_xrefs = [`Tool "Flodot_check"] in
   let man = [
   `S Manpage.s_description;
   `P "After verifying the consistency of the input graph just like $(b,Flodot_check),
       $(tname) prints its $(b,dot) representation on the specified output file."]
   in Term.(const run_output_dot $ vtempreq $ vofname $ vifname |> ret,
-           info "Flodot_dot" ~version:"v0.1.0" ~doc ~man
+           info "Flodot_dot" ~version:"v0.1.0" ~doc ~man ~man_xrefs
            ~exits:(errors_infos @ default_exits))
