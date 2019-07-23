@@ -62,7 +62,7 @@ module Dot_params =
 
   let vertex_attributes v =
     match Attributes.state v with
-    | State.Blocked -> [`Shape `Parallelogram]
+    | State.Blocked -> [`Shape `Box]
     | State.Done -> [`Shape `Oval]
     | State.Ready -> [`Shape `Oval; `Color 0x00cc00]
     | State.Next -> [`Shape `Oval; `Color 0xcc0000]
