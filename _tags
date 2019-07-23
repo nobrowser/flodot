@@ -3,4 +3,5 @@
 <src/*>: package(ppx_deriving.std)
 <src/*>: package(cmdliner)
 <src/Floglob.ml>: warn(-23)
+<src/*>: principal
 "src": include

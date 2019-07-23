@@ -46,7 +46,7 @@ module Graph_builder (F : JSON_FLAGS) : GRAPH_BUILDER =
     | [] -> return default
     | (k, v) :: items ->
        if String.equal q k then return v
-       else assoc' q default items
+       else assoc' q ~default items
 
   let attributes_of_pairs ps =
     let temp =
