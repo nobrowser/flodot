@@ -22,7 +22,7 @@ let has_cycle g = Dfs.has_cycle g
 exception Inconsistent of string list
 
 let raise_hotter n1 n2 =
-  raise (Inconsistent [n1; "is hotter than its dependency"; n2])
+  raise (Inconsistent [n2; "is hotter than its dependency"; n1])
 
 let raise_blocked n1 n2 =
   raise (Inconsistent [n2; "is blocked by"; n1])
@@ -60,12 +60,21 @@ module Dot_params =
   let default_edge_attributes _ = []
   let edge_attributes _ = []
 
+  (* todo: look up the colors from names in rgb.txt *)
   let vertex_attributes v =
-    match Attributes.state v with
-    | State.Blocked -> [`Shape `Box]
-    | State.Done -> [`Shape `Oval]
-    | State.Ready -> [`Shape `Oval; `Color 0x00cc00]
-    | State.Next -> [`Shape `Oval; `Color 0xcc0000]
+    let state_attributes =
+      match Attributes.state v with
+      | State.Blocked -> [`Shape `Box]
+      | State.Done -> [`Shape `Oval; `Color 0xbebebe]
+      | State.Ready -> [`Shape `Oval; `Color 0x00cc00]
+      | State.Next -> [`Shape `Oval; `Color 0xcc0000] in
+    let temp_attributes =
+      match Attributes.temperature v with
+      | Temperature.Normal -> []
+      | Temperature.Cold -> [`Fontcolor 0x20b2aa]
+      | Temperature.Frozen -> [`Fontcolor 0x1874cd]
+      | Temperature.Hot -> [`Fontcolor 0xb22222] in
+    state_attributes @ temp_attributes
 
   end
 

@@ -1,4 +1,8 @@
-type t
+type t =
+  | Frozen
+  | Cold
+  | Normal
+  | Hot
 
 val read : (string, string) Resultx.t -> (t, string) Resultx.t
 
