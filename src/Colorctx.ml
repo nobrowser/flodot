@@ -1,3 +1,5 @@
+open Resultx.Monad
+
 type ctx =
   | Frozen
   | Cold
@@ -17,12 +19,12 @@ module Contexts =
   let pp = pp_ctx
 
   let read s =
-    if String.equal s "Frozen" then Resultx.ok Frozen
-    else if String.equal s "Cold" then Resultx.ok Cold
-    else if String.equal s "Hot" then Resultx.ok Hot
-    else if String.equal s "Done" then Resultx.ok Done
-    else if String.equal s "Ready" then Resultx.ok Ready
-    else if String.equal s "Next" then Resultx.ok Next
+    if String.equal s "Frozen" then return Frozen
+    else if String.equal s "Cold" then return Cold
+    else if String.equal s "Hot" then return Hot
+    else if String.equal s "Done" then return Done
+    else if String.equal s "Ready" then return Ready
+    else if String.equal s "Next" then return Next
     else s ^ ": not a valid color context" |> Resultx.error
 
   end

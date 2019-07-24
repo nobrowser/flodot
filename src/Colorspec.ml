@@ -14,7 +14,7 @@ module type CONTEXTS =
 let explode s = String.to_seq s |> List.of_seq
 
 let int_res_of_string s =
-  try int_of_string s |> Resultx.ok with Failure e -> Resultx.error e
+  try int_of_string s |> return with Failure e -> Resultx.error e
 
 let parse_color s =
   match explode s with
@@ -57,7 +57,7 @@ module Color_parser (Contexts: CONTEXTS) : COLOR_PARSER with type ctx = Contexts
   module CtxMap = Map.Make(Contexts)
 
   let map_from_pairs ps =
-    ps |> List.to_seq |> CtxMap.of_seq |> Resultx.ok
+    ps |> List.to_seq |> CtxMap.of_seq |> return
 
   let parse specs =
     parse_specs Contexts.read specs >>= map_from_pairs
