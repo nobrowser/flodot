@@ -44,7 +44,14 @@ let check_consistency g =
   try M.iter_edges check_edge g ; return g with
   | Inconsistent l -> Resultx.error (String.concat " " l)
 
-module Dot_params =
+module type DEFAULT_MAP =
+  sig
+
+  val m : int Colorctx.Flo_color_parser.CtxMap.t
+
+  end
+
+module Dot_params (Defaults: DEFAULT_MAP) =
   struct
 
   type t = M.t
@@ -60,25 +67,27 @@ module Dot_params =
   let default_edge_attributes _ = []
   let edge_attributes _ = []
 
-  (* todo: look up the colors from names in rgb.txt *)
+  let find c = Colorctx.Flo_color_parser.CtxMap.find c Defaults.m
+
   let vertex_attributes v =
     let state_attributes =
       match Attributes.state v with
       | State.Blocked -> [`Shape `Box]
-      | State.Done -> [`Shape `Oval; `Color 0xbebebe]
-      | State.Ready -> [`Shape `Oval; `Color 0x00cc00]
-      | State.Next -> [`Shape `Oval; `Color 0xcc0000] in
+      | State.Done -> [`Shape `Oval; `Color (find Colorctx.Done)]
+      | State.Ready -> [`Shape `Oval; `Color (find Colorctx.Ready)]
+      | State.Next -> [`Shape `Oval; `Color (find Colorctx.Next)] in
     let temp_attributes =
       match Attributes.temperature v with
       | Temperature.Normal -> []
-      | Temperature.Cold -> [`Fontcolor 0x20b2aa]
-      | Temperature.Frozen -> [`Fontcolor 0x1874cd]
-      | Temperature.Hot -> [`Fontcolor 0xb22222] in
+      | Temperature.Cold -> [`Fontcolor (find Colorctx.Cold)]
+      | Temperature.Frozen -> [`Fontcolor (find Colorctx.Frozen)]
+      | Temperature.Hot -> [`Fontcolor (find Colorctx.Hot)] in
     state_attributes @ temp_attributes
 
   end
 
-module Dot_engine = Graph.Graphviz.Dot (Dot_params)
-
-let output_dot outch g =
+let output_dot outch defaults g =
+  let module Defaults = struct let m = defaults end in
+  let module Params = Dot_params (Defaults) in
+  let module Dot_engine = Graph.Graphviz.Dot (Params) in
   Ok (Dot_engine.output_graph outch g; output_char outch '\n'; flush outch)

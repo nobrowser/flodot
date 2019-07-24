@@ -46,7 +46,24 @@ let run_check_consistency temp_required ifname =
   | Sys_error e -> make_error System e
   | Yojson.Json_error e -> make_error Json e
 
-let run_output_dot temp_required ofname ifname =
+let color_conv = Arg.conv Colorctx.Flo_color_parser.(cmdliner_parse, cmdliner_print)
+
+let default_colors =
+  let default_color_spec =
+    "Done:0xbebebe,\
+     Ready:0x00cc00,\
+     Next:0xcc0000,\
+     Cold:0x20b2aa,\
+     Frozen:0x1874cd,\
+     Hot:0xb22222" in
+  let res = Colorctx.Flo_color_parser.parse default_color_spec in
+  Resultx.get_ok res
+
+let override k v1 v2 = Some v2
+
+let run_output_dot temp_required colors ofname ifname =
+  let final_colors =
+    Colorctx.Flo_color_parser.CtxMap.union override default_colors colors in
   try
   ( let inch = if String.equal ifname "-" then stdin else open_in ifname in
     let outch = if String.equal ofname "-" then stdout else open_out ofname in
@@ -54,7 +71,7 @@ let run_output_dot temp_required ofname ifname =
     Yojson.Basic.from_channel |>
     Flograph.of_json ~temp_required >>=
     Flograph.check_consistency >>=
-    Flograph.output_dot outch |>
+    Flograph.output_dot outch final_colors |>
     Resultx.fold ~ok:(fun _ -> `Ok (0, None)) ~error:(fun e -> make_error Inconsistent e)
   ) with
   | Sys_error e -> make_error System e
@@ -69,6 +86,13 @@ let vtempreq =
              has no $(b,temp) attribute.  But if $(opt) is specified,
              such nodes will be regarded as an error." in
   Arg.(info ["t"; "temp_required"] ~doc |> flag |> value)
+
+let vcolors =
+  let doc = "COLORS must be a string of the form described below in
+             the section \"COLOR SPECIFICATIONS\"." in
+  Arg.(info ["c"; "colors"] ~doc ~docv:"COLORS" |>
+       opt color_conv default_colors |>
+       value)
 
 let vofname =
   let doc = "Direct output to the named file $(i,FILE),
@@ -98,7 +122,11 @@ let output_dot_cmd =
   let man = [
   `S Manpage.s_description;
   `P "After verifying the consistency of the input graph just like $(b,Flodot_check),
-      $(tname) prints its $(b,dot) representation on the specified output file."]
-  in Term.(const run_output_dot $ vtempreq $ vofname $ vifname |> ret,
+      $(tname) prints its $(b,dot) representation on the specified output file.";
+  `S "COLOR SPECIFICATIONS";
+  `P "The $(i,COLORS) argument looks like $(i,CONTEXT1):$(i,COLOR1),$(i,CONTEXT2):$(i,COLOR2),...
+      Each $(i,CONTEXTn) must be one of $(b,Next), $(b,Done), $(b,Ready), $(b,Frozen), $(b,Cold)
+      or $(b,Hot).  Each $(i,COLORn) must be a hexadecimal number prefixed with \"0x\" or \"#\"."]
+  in Term.(const run_output_dot $ vtempreq $ vcolors $ vofname $ vifname |> ret,
            info "Flodot_dot" ~version:"v0.1.0" ~doc ~man ~man_xrefs
            ~exits:(errors_infos @ default_exits))
