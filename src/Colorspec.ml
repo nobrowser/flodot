@@ -35,7 +35,9 @@ let parse_spec reader s =
 
 let parse_specs reader s =
   let spec_list = String.split_on_char ',' s in
-  List.map (parse_spec reader) spec_list |> Resultx.ljoin
+    match spec_list with
+    | [""] -> return []
+    | _ -> List.map (parse_spec reader) spec_list |> Resultx.ljoin
 
 module type COLOR_PARSER =
   sig
@@ -71,10 +73,13 @@ module Color_parser (Contexts: CONTEXTS) : COLOR_PARSER with type ctx = Contexts
       CtxMap.to_seq m |>
       List.of_seq |>
       List.map show_item in
-    let pp_item i s =
-      if i <> 0 then (Format.pp_print_string fmt "," ; Format.pp_print_cut fmt ())
-      else () ;
-      Format.pp_print_string fmt s in
-    List.iteri pp_item items
+    match items with
+    | [] -> Format.pp_print_string fmt "built-in"
+    | _ ->
+       let pp_item i s =
+         if i <> 0 then (Format.pp_print_string fmt "," ; Format.pp_print_cut fmt ())
+         else () ;
+         Format.pp_print_string fmt s in
+       List.iteri pp_item items
 
   end

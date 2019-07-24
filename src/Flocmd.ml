@@ -59,7 +59,7 @@ let default_colors =
   let res = Colorctx.Flo_color_parser.parse default_color_spec in
   Resultx.get_ok res
 
-let override k v1 v2 = Some v2
+let override _ _ v2 = Some v2
 
 let run_output_dot temp_required colors ofname ifname =
   let final_colors =
@@ -95,10 +95,10 @@ let colors_env =
   Term.env_info ~doc "FLODOT_COLORS"
 
 let vcolors =
-  let doc = "COLORS must be a string of the form described below in
+  let doc = "COLORS must be a string of the form described in
              the section \"COLOR SPECIFICATIONS\"." in
   Arg.(info ["c"; "colors"] ~doc ~docv:"COLORS" ~env:colors_env |>
-       opt color_conv default_colors |>
+       opt color_conv Colorctx.Flo_color_parser.CtxMap.empty |>
        value)
 
 let vofname =
