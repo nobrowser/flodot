@@ -17,4 +17,3 @@ clean:
 	$(COMPILE) -clean
 
 .PHONY: byte clean
-
