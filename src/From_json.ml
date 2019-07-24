@@ -61,7 +61,7 @@ module Graph_builder (F : JSON_FLAGS) : GRAPH_BUILDER =
 
   let unlinked_nodes_of_pairs ps =
     let f = fun (k, j) -> (k, attributes_of_json j) in
-    ps |> List.map f |> Sm.check_dupes
+    ps |> List.map f |> Sm.of_list_no_repeats
 
   let check_missing m =
     let make_err l = Resultx.error (String.concat " " l) in
