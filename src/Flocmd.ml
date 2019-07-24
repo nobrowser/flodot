@@ -87,10 +87,17 @@ let vtempreq =
              such nodes will be regarded as an error." in
   Arg.(info ["t"; "temp_required"] ~doc |> flag |> value)
 
+let colors_env =
+  let doc = "Supplies a different default for the $(i,COLORS) string.
+             If present on the command line $(opt) hides it completely,
+             i.e. contexts not named in $(opt) revert to their built-in
+             defaults." in
+  Term.env_info ~doc "FLODOT_COLORS"
+
 let vcolors =
   let doc = "COLORS must be a string of the form described below in
              the section \"COLOR SPECIFICATIONS\"." in
-  Arg.(info ["c"; "colors"] ~doc ~docv:"COLORS" |>
+  Arg.(info ["c"; "colors"] ~doc ~docv:"COLORS" ~env:colors_env |>
        opt color_conv default_colors |>
        value)
 
