@@ -4,4 +4,5 @@
 <src/*>: package(cmdliner)
 <src/Floglob.ml>: warn(-23)
 <src/*>: principal
+<src/Strutils.ml>: warn(-8)
 "src": include

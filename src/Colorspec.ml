@@ -11,19 +11,18 @@ module type CONTEXTS =
 
   end
 
-let explode s = String.to_seq s |> List.of_seq
-
 let int_res_of_string s =
   try int_of_string s |> return with Failure e -> Resultx.error e
 
 let parse_color s =
-  match explode s with
-  | '0' :: 'x' :: _ | '0' :: 'X' :: _ -> int_res_of_string s
-  | '#' :: _ ->
-     let l = String.length s in
-     let s' = String.sub s 1 (l - 1) in
-     int_res_of_string ("0x" ^ s')
-  | _ -> Resultx.error "parse_color: not a valid color spec"
+  if Strutils.is_prefix "0x" s || Strutils.is_prefix "0X" s then
+  ( int_res_of_string s )
+  else if Strutils.is_prefix "#" s then
+  ( let l = String.length s in
+    let s' = String.sub s 1 (l - 1) in
+    int_res_of_string ("0x" ^ s')
+  ) else
+  Resultx.error "parse_color: not a valid color spec"
 
 let parse_spec reader s =
   match String.split_on_char ':' s with
