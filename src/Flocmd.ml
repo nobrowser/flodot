@@ -46,7 +46,11 @@ let run_check_consistency temp_required ifname =
   | Sys_error e -> make_error System e
   | Yojson.Json_error e -> make_error Json e
 
-let color_conv = Arg.conv Colorctx.Flo_color_parser.(cmdliner_parse, cmdliner_print)
+let color_conv =
+  let rgbfile = match Sys.getenv_opt "FLODOT_RGBFILE" with
+  | Some fn -> fn
+  | None -> "/dev/null" in
+  Arg.conv Colorctx.Flo_color_parser.(cmdliner_parse ~rgbfile , cmdliner_print)
 
 let default_colors =
   let default_color_spec =
@@ -56,8 +60,8 @@ let default_colors =
      Cold:0x20b2aa,\
      Frozen:0x1874cd,\
      Hot:0xb22222" in
-  let res = Colorctx.Flo_color_parser.parse default_color_spec in
-  Resultx.get_ok res
+  Colorctx.Flo_color_parser.parse ~rgbfile:"/dev/null" default_color_spec |>
+  Resultx.fold ~ok:(fun v -> v) ~error:(fun s -> failwith s)
 
 let override _ _ v2 = Some v2
 

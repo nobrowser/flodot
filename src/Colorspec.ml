@@ -1,4 +1,5 @@
 open Resultx.Monad
+open Sm
 
 module type CONTEXTS =
   sig
@@ -14,37 +15,72 @@ module type CONTEXTS =
 let int_res_of_string s =
   try int_of_string s |> return with Failure e -> Resultx.error e
 
-let parse_color s =
+let wsp = function ' ' | '\t' -> true | _ -> false
+
+type rgb = {name: string; r: int; g: int; b: int}
+
+let parse_rgb_line s =
+  match Strutils.tokens wsp s with
+  | tr :: tg :: tb :: toks ->
+     if List.compare_length_with toks 0 = 0 then Resultx.error "no color name"
+     else let name = String.concat " " toks in
+          int_res_of_string tr >>= fun r ->
+          int_res_of_string tg >>= fun g ->
+          int_res_of_string tb >>| fun b ->
+          {name; r; g; b}
+  | _ -> Resultx.error "invalid rgb line"
+
+let parse_color ~rgbmap s =
   if Strutils.is_prefix "0x" s || Strutils.is_prefix "0X" s then
-  ( int_res_of_string s )
-  else if Strutils.is_prefix "#" s then
+  ( int_res_of_string s
+  ) else if Strutils.is_prefix "#" s then
   ( let l = String.length s in
     let s' = String.sub s 1 (l - 1) in
     int_res_of_string ("0x" ^ s')
-  ) else
-  Resultx.error "parse_color: not a valid color spec"
+  ) else if Strutils.is_prefix "X/" s then
+  ( let l = String.length s in
+    let s' = String.sub s 2 (l - 2) in
+    match StringMap.find_opt s' rgbmap with
+    | Some c -> return c
+    | None -> s' ^ ": color name not in map" |> Resultx.error
+  ) else Resultx.error "parse_color: not a valid color spec"
 
-let parse_spec reader s =
+let parse_spec ~rgbmap reader s =
   match String.split_on_char ':' s with
   | [name; color] ->
      reader name >>= fun ctx ->
-     parse_color color >>= fun cspec ->
-     return (ctx, cspec)
+     parse_color ~rgbmap color >>| fun cspec ->
+     (ctx, cspec)
   | _ -> Resultx.error "parse_spec: not a valid color spec"
 
-let parse_specs reader s =
+let addc rm {name; r; g; b} =
+  rm >>| fun m ->
+  let c = (r lsl 16) lor (g lsl 8) lor b in
+  StringMap.add name c m
+
+let make_rgbmap fname =
+  try
+  ( Ioutils.fold_file_lines
+    ~f:(fun rm s -> parse_rgb_line s >>= addc rm)
+    ~init:(return StringMap.empty)
+    fname
+  ) with Sys_error e -> Resultx.error e
+
+let parse_specs ~rgbfile reader s =
+  make_rgbmap rgbfile >>= fun rgbmap ->
   let spec_list = String.split_on_char ',' s in
     match spec_list with
     | [""] -> return []
-    | _ -> List.map (parse_spec reader) spec_list |> Resultx.ljoin
+    | _ -> List.map (parse_spec ~rgbmap reader) spec_list |> Resultx.ljoin
 
 module type COLOR_PARSER =
   sig
 
   type ctx
   module CtxMap : Map.S with type key = ctx
-  val parse : string -> (int CtxMap.t, string) Resultx.t
-  val cmdliner_parse : string -> (int CtxMap.t, [`Msg of string]) Resultx.t
+  val parse : rgbfile:string -> string -> (int CtxMap.t, string) Resultx.t
+  val cmdliner_parse : rgbfile:string -> string ->
+                       (int CtxMap.t, [`Msg of string]) Resultx.t
   val cmdliner_print : Format.formatter -> int CtxMap.t -> unit
 
   end
@@ -58,11 +94,11 @@ module Color_parser (Contexts: CONTEXTS) : COLOR_PARSER with type ctx = Contexts
   let map_from_pairs ps =
     ps |> List.to_seq |> CtxMap.of_seq |> return
 
-  let parse specs =
-    parse_specs Contexts.read specs >>= map_from_pairs
+  let parse ~rgbfile specs =
+    parse_specs ~rgbfile Contexts.read specs >>= map_from_pairs
 
-  let cmdliner_parse specs =
-    let r = parse specs in
+  let cmdliner_parse ~rgbfile specs =
+    let r = parse ~rgbfile specs in
     Resultx.fold r ~ok:(fun v -> return v) ~error:(fun m -> Resultx.error (`Msg m))
 
   let cmdliner_print fmt m =
