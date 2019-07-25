@@ -9,7 +9,7 @@ let tokens ~f:f s =
        ( match st with
          | Out -> bounds ((i - 1, i) :: ac) In (i - 1)
          | In ->
-            let (_, j) :: js = ac in
+            let (_, j), js = List.(hd ac, tl ac) in
             bounds ((i - 1, j) :: js) In (i - 1)
        ) in
   List.map (fun (i, j) -> String.sub s i (j - i)) (bounds [] Out l)
@@ -22,7 +22,8 @@ let fields ~f:f s =
        ( match st with
          | In ->
             if f s.[i - 1] then bounds ac Out (i - 1)
-            else let (_, j) :: js = ac in bounds ((i - 1, j) :: js) In (i - 1)
+            else let (_, j), js = List.(hd ac, tl ac) in
+                 bounds ((i - 1, j) :: js) In (i - 1)
          | Out ->
             if f s.[i - 1] then bounds ((i, i) :: ac) Out (i - 1)
             else bounds ac In (i - 1)
