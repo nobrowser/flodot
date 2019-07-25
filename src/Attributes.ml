@@ -13,8 +13,8 @@ let fold_left_deps ~f a {deps} = List.fold_left f a deps
 let make_attributes rt rs rdeps =
   rt >>= fun t ->
   rs >>= fun s ->
-  rdeps >>= fun deps ->
-  return {t; s; deps}
+  rdeps >>| fun deps ->
+  {t; s; deps}
 
 module V =
   struct
