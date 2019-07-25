@@ -137,7 +137,13 @@ let output_dot_cmd =
   `S "COLOR SPECIFICATIONS";
   `P "The $(i,COLORS) argument looks like $(i,CONTEXT1):$(i,COLOR1),$(i,CONTEXT2):$(i,COLOR2),...
       Each $(i,CONTEXTn) must be one of $(b,Next), $(b,Done), $(b,Ready), $(b,Frozen), $(b,Cold)
-      or $(b,Hot).  Each $(i,COLORn) must be a hexadecimal number prefixed with \"0x\" or \"#\"."]
+      or $(b,Hot).  Each $(i,COLORn) must be a hexadecimal number prefixed with \"0x\" or \"#\".
+      You can also write $(i,COLORn) as \"X/$(i,COLORNAME)\" where $(i,COLORNAME) refers
+      to a line in a file like the $(b,rgb.txt) file which comes with Xorg, but only if you make
+      the environment variable $(b,FLODOT_RGBFILE) point to the file.";
+  `S Manpage.s_environment;
+  Manpage.s_environment_intro;
+  `I ("$(b,FLODOT_RGBFILE)", "File name of a color list, like Xorg's $(b,rgb.txt).")]
   in Term.(const run_output_dot $ vtempreq $ vcolors $ vofname $ vifname |> ret,
            info "Flodot_dot" ~version:"v0.1.0" ~doc ~man ~man_xrefs
            ~exits:(errors_infos @ default_exits))
