@@ -1,6 +1,9 @@
 type tokstate = In | Out
 
-let tokens ~f:f s =
+let substrings_of_bounds s bs =
+  List.map (fun (i, j) -> String.sub s i (j - i)) bs
+
+let token_bounds ~f:f s =
   let l = String.length s in
   let rec bounds ac st = function
     | 0 -> ac
@@ -12,9 +15,11 @@ let tokens ~f:f s =
             let (_, j), js = List.(hd ac, tl ac) in
             bounds ((i - 1, j) :: js) In (i - 1)
        ) in
-  List.map (fun (i, j) -> String.sub s i (j - i)) (bounds [] Out l)
+  bounds [] Out l
 
-let fields ~f:f s =
+let tokens ~f s = token_bounds ~f s |> substrings_of_bounds s
+
+let field_bounds ~f:f s =
   let l = String.length s in
   let rec bounds ac st = function
     | 0 -> (match st with In -> ac | Out -> ((0, 0) :: ac))
@@ -28,7 +33,9 @@ let fields ~f:f s =
             if f s.[i - 1] then bounds ((i, i) :: ac) Out (i - 1)
             else bounds ac In (i - 1)
        ) in
-  List.map (fun (i, j) -> String.sub s i (j - i)) (bounds [] Out l)
+  bounds [] Out l
+
+let fields ~f s = field_bounds ~f s |> substrings_of_bounds s
 
 let is_prefix p s =
   let lp, ls = String.(length p, length s) in
