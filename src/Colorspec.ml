@@ -20,14 +20,13 @@ let wsp = function ' ' | '\t' -> true | _ -> false
 type rgb = {name: string; r: int; g: int; b: int}
 
 let parse_rgb_line s =
-  match Strutils.tokens wsp s with
-  | tr :: tg :: tb :: toks ->
-     if List.compare_length_with toks 0 = 0 then Resultx.error "no color name"
-     else let name = String.concat " " toks in
-          int_res_of_string tr >>= fun r ->
-          int_res_of_string tg >>= fun g ->
-          int_res_of_string tb >>| fun b ->
-          {name; r; g; b}
+  match Strutils.tokens ~max:3 ~f:wsp s with
+  | [tr; tg; tb], Some rest ->
+     let name = String.trim rest in
+     int_res_of_string tr >>= fun r ->
+     int_res_of_string tg >>= fun g ->
+     int_res_of_string tb >>| fun b ->
+     {name; r; g; b}
   | _ -> Resultx.error "invalid rgb line"
 
 let parse_color ~rgbmap s =
