@@ -1,4 +1,4 @@
-open Resultx.Monad
+open Aaa.Resultx.Monad
 
 type t =
   | Done
@@ -12,6 +12,6 @@ let read' s =
   else if String.equal s "blocked" then return Blocked
   else if String.equal s "ready" then return Ready
   else if String.equal s "next" then return Next
-  else Resultx.error ("invalid state " ^ s)
+  else Error ("invalid state " ^ s)
 
 let read r = r >>= read'

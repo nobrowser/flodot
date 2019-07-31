@@ -1,4 +1,4 @@
-open Resultx.Monad
+open Aaa.Resultx.Monad
 
 type t =
   | Frozen
@@ -12,6 +12,6 @@ let read' s =
   else if String.equal s "cold" then return Cold
   else if String.equal s "normal" then return Normal
   else if String.equal s "hot" then return Hot
-  else Resultx.error ("invalid temperature " ^ s)
+  else Error ("invalid temperature " ^ s)
 
-let read r = r >>= read'       
+let read r = r >>= read'

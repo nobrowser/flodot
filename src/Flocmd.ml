@@ -1,6 +1,6 @@
 open Cmdliner
 
-open Resultx.Monad
+open Aaa.Resultx.Monad
 
 type prog = (int * string option) Term.t * Term.info
 
@@ -41,7 +41,9 @@ let run_check_consistency temp_required ifname =
     Yojson.Basic.from_channel |>
     Flograph.of_json ~temp_required >>=
     Flograph.check_consistency |>
-    Resultx.fold ~ok:(fun _ -> `Ok (0, None)) ~error:(fun e -> make_error Inconsistent e)
+    Aaa.Resultx.fold
+    ~ok:(fun _ -> `Ok (0, None))
+    ~error:(fun e -> make_error Inconsistent e)
   ) with
   | Sys_error e -> make_error System e
   | Yojson.Json_error e -> make_error Json e
@@ -61,7 +63,7 @@ let default_colors =
      Frozen:0x1874cd,\
      Hot:0xb22222" in
   Colorctx.Flo_color_parser.parse ~rgbfile:"/dev/null" default_color_spec |>
-  Resultx.fold ~ok:(fun v -> v) ~error:(fun s -> failwith s)
+  Aaa.Resultx.fold ~ok:(fun v -> v) ~error:(fun s -> failwith s)
 
 let override _ _ v2 = Some v2
 
@@ -76,7 +78,9 @@ let run_output_dot temp_required colors ofname ifname =
     Flograph.of_json ~temp_required >>=
     Flograph.check_consistency >>=
     Flograph.output_dot outch final_colors |>
-    Resultx.fold ~ok:(fun _ -> `Ok (0, None)) ~error:(fun e -> make_error Inconsistent e)
+    Aaa.Resultx.fold
+    ~ok:(fun _ -> `Ok (0, None))
+    ~error:(fun e -> make_error Inconsistent e)
   ) with
   | Sys_error e -> make_error System e
   | Yojson.Json_error e -> make_error Json e

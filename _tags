@@ -2,5 +2,6 @@
 <src/*>: package(ocamlgraph)
 <src/*>: package(ppx_deriving.std)
 <src/*>: package(cmdliner)
+<src/*>: package(aaa)
 <src/*>: principal
 "src": include

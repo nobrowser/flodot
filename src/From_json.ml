@@ -1,7 +1,7 @@
-open Resultx.Monad
+open Aaa.Resultx.Monad
 open Attributes
 
-module SM = Sm.StringMap
+module SM = Aaa.Sm.StringMap
 
 module type JSON_FLAGS =
   sig
@@ -16,19 +16,19 @@ module type GRAPH_BUILDER =
 
   val graph : Yojson.Basic.t ->
               (Attributes.V.t list * (Attributes.V.t * Attributes.V.t) list, string)
-              Resultx.t
+              result
 
   end
 
 module Graph_builder (F : JSON_FLAGS) : GRAPH_BUILDER =
   struct
 
-  let un_error str = Resultx.error ("not a JSON " ^ str)
+  let un_error str = Error ("not a JSON " ^ str)
   let unassoc = function `Assoc x -> return x | _ -> un_error "assoc"
   let unlist = function `List x -> return x | _ -> un_error "list"
   let unstring = function `String x -> return x | _ -> un_error "string"
 
-  let extract_string_list j = unlist j >>| List.map unstring >>= Resultx.ljoin
+  let extract_string_list j = unlist j >>| List.map unstring >>= Aaa.Resultx.ljoin
 
   let reader jt js jdeps =
     let rt = jt |> unstring |> Temperature.read in
@@ -37,7 +37,7 @@ module Graph_builder (F : JSON_FLAGS) : GRAPH_BUILDER =
     make_attributes rt rs rdeps
 
   let rec assoc q = function
-    | [] -> Resultx.error (q ^ " required but absent")
+    | [] -> Error (q ^ " required but absent")
     | (k, v) :: items ->
        if String.equal q k then return v
        else assoc q items
@@ -61,21 +61,21 @@ module Graph_builder (F : JSON_FLAGS) : GRAPH_BUILDER =
 
   let unlinked_nodes_of_pairs ps =
     let f = fun (k, j) -> (k, attributes_of_json j) in
-    ps |> List.map f |> Sm.of_list_no_repeats
+    ps |> List.map f |> Aaa.Sm.of_list_no_repeats
 
   let check_missing m =
-    let make_err l = Resultx.error (String.concat " " l) in
+    let make_err l = Error (String.concat " " l) in
     let p _ n a =
       match find_deps_opt ~f:(fun dep -> not (SM.mem dep m)) a with
       | Some dep -> make_err ["dependency"; dep; "of"; n; "is missing"]
       | None -> Ok () in
-    Sm.StringMapRx.mfold p () m |> Resultx.map (fun _ -> m)
+    Aaa.Sm.StringMapRx.mfold p () m |> Aaa.Resultx.map (fun _ -> m)
 
   let unlinked_nodes_of_json j =
     j |>
     unassoc >>=
     unlinked_nodes_of_pairs >>=
-    Sm.StringMapRx.mjoin >>=
+    Aaa.Sm.StringMapRx.mjoin >>=
     check_missing
 
   let graph j =

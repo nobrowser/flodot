@@ -6,6 +6,6 @@ type ctx =
   | Ready
   | Next
 
-module Contexts : Colorspec.CONTEXTS with type t = ctx
+module Contexts : Aaa.Colorspec.CONTEXTS with type t = ctx
 
-module Flo_color_parser : Colorspec.COLOR_PARSER with type ctx = Contexts.t
+module Flo_color_parser : Aaa.Colorspec.COLOR_PARSER with type ctx = Contexts.t

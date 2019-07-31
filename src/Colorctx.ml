@@ -1,4 +1,4 @@
-open Resultx.Monad
+open Aaa.Resultx.Monad
 
 type ctx =
   | Frozen
@@ -25,8 +25,8 @@ module Contexts =
     else if String.equal s "Done" then return Done
     else if String.equal s "Ready" then return Ready
     else if String.equal s "Next" then return Next
-    else s ^ ": not a valid color context" |> Resultx.error
+    else Error (s ^ ": not a valid color context")
 
   end
 
-module Flo_color_parser = Colorspec.Color_parser(Contexts)
+module Flo_color_parser = Aaa.Colorspec.Color_parser(Contexts)

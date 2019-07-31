@@ -4,7 +4,7 @@ type t =
   | Ready
   | Next
 
-val read : (string, string) Resultx.t -> (t, string) Resultx.t
+val read : (string, string) result -> (t, string) result
 
 val compare : t -> t -> int
 

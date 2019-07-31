@@ -1,4 +1,4 @@
-open Resultx.Monad
+open Aaa.Resultx.Monad
 
 type attributes =
   { t: Temperature.t
@@ -22,7 +22,7 @@ module V =
   type t = string * attributes
   let equal (n, _) (n', _) = String.equal n n'
   let compare (n, _) (n', _) = String.compare n n'
-  let hash (n, _) = HashedString.hash n
+  let hash (n, _) = Aaa.HashedString.hash n
 
   type label = t
   let create n = n

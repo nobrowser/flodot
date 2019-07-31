@@ -4,7 +4,7 @@ type t =
   | Normal
   | Hot
 
-val read : (string, string) Resultx.t -> (t, string) Resultx.t
+val read : (string, string) result -> (t, string) result
 
 val equal : t -> t -> bool
 

@@ -1,4 +1,4 @@
-open Resultx.Monad
+open Aaa.Resultx.Monad
 
 module M =
   Graph.Persistent.Digraph.ConcreteBidirectional (Attributes.V)
@@ -42,7 +42,7 @@ let check_edge v1 v2 =
 
 let check_consistency g =
   try M.iter_edges check_edge g ; return g with
-  | Inconsistent l -> Resultx.error (String.concat " " l)
+  | Inconsistent l -> Error (String.concat " " l)
 
 module type DEFAULT_MAP =
   sig
