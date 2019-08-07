@@ -3,3 +3,7 @@
   (libraries aaa yojson cmdliner ocamlgraph)
   (flags (-principal -w -32 -w -9 -w -6))
   (preprocess (pps ppx_deriving.std)))
+
+(alias
+  (name default)
+  (deps (file flodot.bc)))
