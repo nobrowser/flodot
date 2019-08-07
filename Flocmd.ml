@@ -34,20 +34,6 @@ let errors_infos =
 let make_error err errstr =
   let n = errors_to_enum err in `Ok (n, Some errstr)
 
-let run_check_consistency temp_required ifname =
-  try
-  ( let ch = if String.equal ifname "-" then stdin else open_in ifname in
-    ch |>
-    Yojson.Basic.from_channel |>
-    Flograph.of_json ~temp_required >>=
-    Flograph.check_consistency |>
-    Aaa.Resultx.fold
-    ~ok:(fun _ -> `Ok (0, None))
-    ~error:(fun e -> make_error Inconsistent e)
-  ) with
-  | Sys_error e -> make_error System e
-  | Yojson.Json_error e -> make_error Json e
-
 let color_conv =
   let rgbfile = match Sys.getenv_opt "FLODOT_RGBFILE" with
   | Some fn -> fn
@@ -114,8 +100,8 @@ let vofname =
              or to the standard output if $(i,FILE) is $(b,-)." in
   Arg.(info ["o"; "output"] ~doc ~docv:"FILE" |> opt string "-" |> value)
 
-let check_cmd =
-  let doc = "Check consistency of dependency graph" in
+let flodot_cmd =
+  let doc = "Output dependency graph in dot format" in
   let man = [
   `S Manpage.s_description;
   `P "$(tname) verifies that the graph specified in $(i,FILE) is consistent.
@@ -125,18 +111,7 @@ let check_cmd =
       does not exceed the temperature of any of its dependencies, and that
       a node with a dependency in a state other than $(b,Done) is itself in
       the $(b,Blocked) state.";
-  `P "To verify a graph passed via standard output (for example in a shell pipe)
-      supply $(b,-) as the $(i,FILE) argument, or omit it completely."]
-  in Term.(const run_check_consistency $ vtempreq $ vifname |> ret,
-           info "Flodot_check" ~version:"v0.1.0" ~doc ~man
-           ~exits:(errors_infos @ default_exits))
-
-let output_dot_cmd =
-  let doc = "Output dependency graph in dot format" in
-  let man_xrefs = [`Tool "Flodot_check"] in
-  let man = [
-  `S Manpage.s_description;
-  `P "After verifying the consistency of the input graph just like $(b,Flodot_check),
+  `P "After verifying the consistency of the input graph,
       $(tname) prints its $(b,dot) representation on the specified output file.";
   `S "COLOR SPECIFICATIONS";
   `P "The $(i,COLORS) argument looks like $(i,CONTEXT1):$(i,COLOR1),$(i,CONTEXT2):$(i,COLOR2),...
@@ -149,5 +124,5 @@ let output_dot_cmd =
   Manpage.s_environment_intro;
   `I ("$(b,FLODOT_RGBFILE)", "File name of a color list, like Xorg's $(b,rgb.txt).")]
   in Term.(const run_output_dot $ vtempreq $ vcolors $ vofname $ vifname |> ret,
-           info "Flodot_dot" ~version:"v0.1.0" ~doc ~man ~man_xrefs
+           info "flodot" ~version:"v0.1.0" ~doc ~man
            ~exits:(errors_infos @ default_exits))
