@@ -1,6 +1,0 @@
-This is the original version of the software "flodot",
-a tool for converting a JSON project description into
-a graph in the Graphviz dot notation.
-
-The unmodified version can be obtained from
-https://repo.or.cz/flodot/
