@@ -1,3 +1,4 @@
 /.misc/
 /_build/
 .merlin
+*.install
