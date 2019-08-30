@@ -17,6 +17,6 @@ build: [
   [make "byte" "native"]
 ]
 install: [
-  ["./install.sh"]
+  ["install" "flodot.byte" "flodot.native" bin]
 ]
 dev-repo: "git+file:///home/itz/git/flodot#master"
