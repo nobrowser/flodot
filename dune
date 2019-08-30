@@ -1,5 +1,0 @@
-(executable
-  (name flodot)
-  (libraries aaa.Aaa yojson cmdliner ocamlgraph)
-  (flags (-principal -w -32 -w -9 -w -6))
-  (preprocess (pps ppx_deriving.std)))
