@@ -14,7 +14,7 @@ depends: [
   "ocamlgraph" {>= "1.8.8"}
 ]
 build: [
-  [make "byte" "native"]
+  ["make" "byte" "native"]
 ]
 install: [
   ["./install.sh"]
