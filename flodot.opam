@@ -15,9 +15,7 @@ depends: [
   "ocamlgraph" {>= "1.8.8"}
 ]
 build: [
-  ["dune" "build"]
-]
-install: [
-  ["dune" "install"]
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "-p" name "-j" jobs]
 ]
 dev-repo: "git+file:///home/itz/git/flodot#master"
