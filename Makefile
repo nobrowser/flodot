@@ -2,7 +2,15 @@ SHELL = /bin/sh
 PATH != eval "`opam env`" ; echo "$${PATH}"
 export PATH
 
-OCAMLFLAGS = -principal
+PKGS = \
+	-package cmdliner \
+	-package aaa \
+	-package ppx_deriving.std \
+	-package ocamlgraph \
+	-package yojson
+
+OCAMLC = ocamlfind ocamlc $(PKGS) -linkpkg -principal   # add other options for ocamlc here
+OCAMLOPT = ocamlfind ocamlopt $(PKGS) -linkpkg -principal
 
 # The list of object files for FLODOT
 FLODOT_SUBMODULES != echo [A-Z]*.ml
@@ -18,22 +26,22 @@ byte: flodot.byte
 native: flodot.native
 
 flodot.byte: flodot.cmo $(FLODOT_BYTEOBJS)
-		@ ./compile.sh byte -linkpkg flodot.byte $(OCAMLFLAGS) $(FLODOT_BYTEOBJS) flodot.cmo
+		$(OCAMLC) -o flodot.byte $(FLODOT_BYTEOBJS) flodot.cmo
 
 flodot.native: flodot.cmx $(FLODOT_NATIVEOBJS)
-		@ ./compile.sh native -linkpkg flodot.native $(OCAMLFLAGS) $(FLODOT_NATIVEOBJS) flodot.cmx
+		$(OCAMLOPT) -o flodot.native $(FLODOT_NATIVEOBJS) flodot.cmx
 
 # Common rules
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
 .ml.cmo:
-		@ ./compile.sh byte -c $@ $(OCAMLFLAGS) $<
+		$(OCAMLC) $(OCAMLFLAGS) -c -o $@ $<
 
 .ml.cmx:
-		@ ./compile.sh native -c $@ $(OCAMLFLAGS) $<
+		$(OCAMLOPT) $(OCAMLFLAGS) -c -o $@ $<
 
 .mli.cmi:
-		@ ./compile.sh byte -c $@ $(OCAMLFLAGS) $<
+		$(OCAMLC) $(OCAMLFLAGS) -c -o $@ $<
 
 # Dependencies
 .depend: Makefile $(FLODOT_INTERFACES) $(FLODOT_SUBMODULES) flodot.ml
@@ -41,7 +49,7 @@ flodot.native: flodot.cmx $(FLODOT_NATIVEOBJS)
 
 include .depend
 
-.PHONY: clean
+.PHONY: clean byte native
 
 clean:
 		rm -f *.cmo *.o *.cmx *.cmi *.byte *.native .depend
