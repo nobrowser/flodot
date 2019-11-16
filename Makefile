@@ -49,7 +49,7 @@ flodot.native: flodot.cmx $(FLODOT_NATIVEOBJS)
 
 include .depend
 
-.PHONY: clean byte native
+.PHONY: clean
 
 clean:
 		rm -f *.cmo *.o *.cmx *.cmi *.byte *.native .depend
