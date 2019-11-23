@@ -5,10 +5,3 @@
   (flags (-principal -w -32 -w -9 -w -6))
   (preprocess (pps ppx_deriving.std)))
 
-(alias
-  (name default)
-  (deps
-   (file flodot.bc)
-   (file flodot.exe)
-   (file flodot.install)
-   (file flodot.opam)))
